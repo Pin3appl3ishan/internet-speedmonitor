@@ -21,7 +21,13 @@ export const SpeedChart: React.FC<SpeedChartProps> = ({
   data,
   height = 400,
 }) => {
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: ChartDataPoint }>;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
