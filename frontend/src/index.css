@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .stat-card {
+    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-600 mt-1;
+  }
+
+  .filter-button {
+    @apply px-4 py-2 rounded-md text-sm font-medium transition-colors;
+  }
+
+  .filter-button.active {
+    @apply bg-primary-600 text-white;
+  }
+
+  .filter-button.inactive {
+    @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50;
+  }
+}
