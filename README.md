@@ -248,8 +248,4 @@ The dashboard shows:
 }
 ```
 
----
-
-### ✅ Do you want me to **now generate the starting code for all three parts (collector, backend, frontend) and include mini README for each** so you can just open this in Cursor IDE and start coding?
-
-Or **start with Collector + Backend integration first**?
+Contributions are welcome.
