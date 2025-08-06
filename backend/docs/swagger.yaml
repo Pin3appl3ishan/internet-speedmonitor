@@ -1,0 +1,229 @@
+openapi: 3.0.0
+info:
+  title: Internet Speed Monitor API
+  description: API for tracking and retrieving internet speed test results
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    SpeedTest:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-07-23T10:30:00.000Z"
+        provider:
+          type: string
+          enum: [fast.com, speedtest.net]
+          example: "speedtest.net"
+        server:
+          type: string
+          example: "New York, NY"
+        download_mbps:
+          type: number
+          format: float
+          example: 95.67
+        upload_mbps:
+          type: number
+          format: float
+          example: 45.32
+        latency_ms:
+          type: number
+          format: float
+          example: 12.5
+        raw_json:
+          type: object
+          nullable: true
+          example: {}
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    SpeedTestInput:
+      type: object
+      required:
+        - provider
+        - download_mbps
+        - upload_mbps
+        - latency_ms
+      properties:
+        provider:
+          type: string
+          enum: [fast.com, speedtest.net]
+          example: "speedtest.net"
+        server:
+          type: string
+          example: "New York, NY"
+        download_mbps:
+          type: number
+          format: float
+          example: 95.67
+        upload_mbps:
+          type: number
+          format: float
+          example: 45.32
+        latency_ms:
+          type: number
+          format: float
+          example: 12.5
+        timestamp:
+          type: string
+          format: date-time
+          description: Optional, defaults to current time
+        raw_json:
+          type: object
+          description: Raw test result data
+          example: {}
+    
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error message"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "download_mbps"
+              message:
+                type: string
+                example: "Download speed must be a positive number"
+
+paths:
+  /speed:
+    get:
+      summary: Get speed test results
+      description: Retrieve speed test results with optional date range filtering
+      tags:
+        - Speed Tests
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+            enum: [day, week, month, custom]
+            default: day
+          description: Time range for the query
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Start date for custom range (YYYY-MM-DD)
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+          description: End date for custom range (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  range:
+                    type: string
+                  stats:
+                    type: object
+                    properties:
+                      avgDownload:
+                        type: number
+                      avgUpload:
+                        type: number
+                      avgLatency:
+                        type: number
+                      maxDownload:
+                        type: number
+                      maxUpload:
+                        type: number
+                      minLatency:
+                        type: number
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SpeedTest'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    post:
+      summary: Add a new speed test result
+      description: Record a new internet speed test result
+      tags:
+        - Speed Tests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeedTestInput'
+      responses:
+        '201':
+          description: Speed test result created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeedTest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      summary: Health check
+      description: Check if the API is running
+      tags:
+        - System
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-07-23T10:30:00.000Z"

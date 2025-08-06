@@ -1,0 +1,45 @@
+{
+  "name": "internet-speed-monitor-api",
+  "version": "1.0.0",
+  "description": "Backend API for Internet Speed Monitor",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "NODE_ENV=test jest --detectOpenHandles --forceExit",
+    "lint": "eslint .",
+    "migrate": "node src/config/db/migrate.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.2.0",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "http-status-codes": "^2.2.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.16.3",
+    "pino-http": "10.5.0",
+    "pino-pretty": "^10.3.1",
+    "sequelize": "^6.37.1",
+    "sqlite3": "^5.1.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
