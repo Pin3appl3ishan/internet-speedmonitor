@@ -2,6 +2,12 @@
 
 A **full-stack internet speed monitoring system** that tracks your internet speed every 10 minutes and visualizes the data on a React dashboard. Perfect for analyzing your ISP performance over time.
 
+## **🚀 Live Demo**
+
+**Try it now**: [**⚡ Internet Speed Monitor**](https://internet-speedmonitor-4lfbmj3kn-pin3appl3ishans-projects.vercel.app/)
+
+> **Live deployment** featuring real-time data collection, interactive charts, and 24/7 automated monitoring!
+
 ---
 
 ## **📌 Features**
