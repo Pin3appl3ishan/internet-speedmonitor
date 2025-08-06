@@ -1,0 +1,29 @@
+# Dockerfile for Python collector service
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python dependencies
+COPY collector/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy collector code
+COPY collector/ .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash collector
+RUN chown -R collector:collector /app
+USER collector
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
+  CMD python -c "import sqlite3; conn = sqlite3.connect('../backend/database.sqlite'); cursor = conn.execute('SELECT COUNT(*) FROM speed_tests WHERE timestamp > datetime(\"now\", \"-20 minutes\")'); count = cursor.fetchone()[0]; conn.close(); exit(0 if count > 0 else 1)" || exit 1
+
+# Run the collector
+CMD ["python", "speed_tracker.py"]
