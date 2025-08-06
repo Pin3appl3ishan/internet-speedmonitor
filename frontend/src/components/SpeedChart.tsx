@@ -1,4 +1,4 @@
-import React from "react";
+// import React from "react"; // Not needed in React 18
 import {
   LineChart,
   Line,
@@ -17,10 +17,7 @@ interface SpeedChartProps {
   height?: number;
 }
 
-export const SpeedChart: React.FC<SpeedChartProps> = ({
-  data,
-  height = 400,
-}) => {
+export const SpeedChart = ({ data, height = 400 }: SpeedChartProps) => {
   const CustomTooltip = ({
     active,
     payload,
