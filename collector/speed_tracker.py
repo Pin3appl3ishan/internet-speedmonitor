@@ -55,6 +55,7 @@ else:
 INTERVAL_MINUTES = int(os.getenv("INTERVAL_MINUTES", "10"))
 MAX_DOWNLOAD_MBPS = float(os.getenv("MAX_DOWNLOAD_MBPS", "1000"))
 MAX_UPLOAD_MBPS = float(os.getenv("MAX_UPLOAD_MBPS", "1000"))
+PREFERRED_SERVER_ID = os.getenv("PREFERRED_SERVER_ID")  # Optional: force specific server ID
 
 # ---------------------------------------------------------------------------
 # Database setup
@@ -104,18 +105,48 @@ class SpeedProviderError(Exception):
 # Fast.com support removed
 
 class SpeedtestCLIRunner:
-    """Runs speedtest-cli in blocking executor"""
+    """Runs speedtest-cli with optimal server selection"""
 
     def _blocking(self) -> SpeedResult:
-        st = speedtest.Speedtest()
-        st.get_best_server()
-        st.download()
-        st.upload()
-        data = st.results.dict()
+        try:
+            # Initialize with secure=True to avoid 403 errors
+            st = speedtest.Speedtest(secure=True)
+            
+            # Get servers and find the best one (closest/lowest latency)
+            if PREFERRED_SERVER_ID:
+                logger.info(f"Using preferred server ID: {PREFERRED_SERVER_ID}")
+                servers = st.get_servers([int(PREFERRED_SERVER_ID)])
+                best_server = servers[int(PREFERRED_SERVER_ID)][0]
+                st.servers = servers
+            else:
+                logger.info("Finding optimal server...")
+                servers = st.get_servers()
+                best_server = st.get_best_server()
+            
+            logger.info(
+                f"Selected server: {best_server['name']} ({best_server['sponsor']}) "
+                f"- Distance: {best_server.get('d', 0):.1f}km, Latency: {best_server.get('latency', 0):.1f}ms"
+            )
+            
+            logger.info("Running download test...")
+            st.download()
+            logger.info("Running upload test...")
+            st.upload()
+            data = st.results.dict()
+            
+            logger.info(f"Test completed - Download: {data['download'] / 1_000_000:.2f} Mbps, Upload: {data['upload'] / 1_000_000:.2f} Mbps")
+            
+        except Exception as e:
+            logger.error(f"Speedtest failed: {e}")
+            raise
+        
+        # Log the actual server used in results
+        server_info = f"{data['server']['name']}, {data['server']['country']} ({data['server']['sponsor']})"
+        
         return SpeedResult(
             timestamp=datetime.now(tz.UTC),
             provider=Provider.SPEEDTEST,
-            server=data["server"]["name"],
+            server=server_info,
             download_mbps=round(data["download"] / 1_000_000, 2),
             upload_mbps=round(data["upload"] / 1_000_000, 2),
             latency_ms=data["ping"],
