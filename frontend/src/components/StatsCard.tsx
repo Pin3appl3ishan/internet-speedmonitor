@@ -40,11 +40,13 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           <div className="flex items-center">
             <div className="text-primary-600 mr-3">{icon}</div>
             <div>
-              <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                {title}
+              </h3>
               <div className="flex items-baseline">
                 <p className="stat-value">
                   {formatValue(value)}
-                  <span className="text-sm font-normal text-gray-500 ml-1">
+                  <span className="text-sm font-normal text-gray-500 ml-1 dark:text-gray-400">
                     {unit}
                   </span>
                 </p>

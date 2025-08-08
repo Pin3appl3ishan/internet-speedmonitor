@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import { body, query } from 'express-validator';
-import { validateRequest } from '../middlewares/validation.middleware.js';
+import { Router } from "express";
+import { body, query } from "express-validator";
+import { validateRequest } from "../middlewares/validation.middleware.js";
 import {
   getSpeedTests,
   createSpeedTest,
-} from '../controllers/speedtest.controller.js';
+} from "../controllers/speedtest.controller.js";
 
 const router = Router();
 
@@ -75,27 +75,29 @@ const router = Router();
  *                     $ref: '#/components/schemas/SpeedTest'
  */
 router.get(
-  '/',
+  "/",
   [
-    query('range')
+    query("range")
       .optional()
-      .isIn(['day', 'week', 'month', 'custom'])
-      .withMessage('Range must be one of: day, week, month, custom'),
-    query('startDate')
-      .if(query('range').equals('custom'))
+      .isIn(["day", "week", "month", "custom"])
+      .withMessage("Range must be one of: day, week, month, custom"),
+    query("startDate")
+      .if(query("range").equals("custom"))
       .notEmpty()
       .isISO8601()
-      .withMessage('startDate is required and must be a valid date (YYYY-MM-DD)'),
-    query('endDate')
-      .if(query('range').equals('custom'))
+      .withMessage(
+        "startDate is required and must be a valid date (YYYY-MM-DD)"
+      ),
+    query("endDate")
+      .if(query("range").equals("custom"))
       .notEmpty()
       .isISO8601()
-      .withMessage('endDate is required and must be a valid date (YYYY-MM-DD)'),
+      .withMessage("endDate is required and must be a valid date (YYYY-MM-DD)"),
   ],
   validateRequest,
   async (req, res, next) => {
     try {
-      const { range = 'day', startDate, endDate } = req.query;
+      const { range = "day", startDate, endDate } = req.query;
       const results = await getSpeedTests(range, startDate, endDate);
       res.json(results);
     } catch (error) {
@@ -125,17 +127,23 @@ router.get(
  *               $ref: '#/components/schemas/SpeedTest'
  */
 router.post(
-  '/',
+  "/",
   [
-    body('provider')
-      .isIn(['fast.com', 'speedtest.net'])
-      .withMessage('Provider must be either fast.com or speedtest.net'),
-    body('download_mbps').isFloat({ min: 0 }).withMessage('Download speed must be a positive number'),
-    body('upload_mbps').isFloat({ min: 0 }).withMessage('Upload speed must be a positive number'),
-    body('latency_ms').isFloat({ min: 0 }).withMessage('Latency must be a positive number'),
-    body('server').optional().isString(),
-    body('timestamp').optional().isISO8601().toDate(),
-    body('raw_json').optional().isObject(),
+    body("provider")
+      .isIn(["speedtest.net"])
+      .withMessage("Provider must be speedtest.net"),
+    body("download_mbps")
+      .isFloat({ min: 0 })
+      .withMessage("Download speed must be a positive number"),
+    body("upload_mbps")
+      .isFloat({ min: 0 })
+      .withMessage("Upload speed must be a positive number"),
+    body("latency_ms")
+      .isFloat({ min: 0 })
+      .withMessage("Latency must be a positive number"),
+    body("server").optional().isString(),
+    body("timestamp").optional().isISO8601().toDate(),
+    body("raw_json").optional().isObject(),
   ],
   validateRequest,
   async (req, res, next) => {

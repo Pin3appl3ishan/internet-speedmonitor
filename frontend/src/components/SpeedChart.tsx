@@ -28,8 +28,8 @@ export const SpeedChart = ({ data, height = 400 }: SpeedChartProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium text-gray-900 mb-1">
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
             {format(new Date(data.timestamp), "MMM dd, yyyy HH:mm")}
           </p>
           <div className="space-y-1">
@@ -50,7 +50,7 @@ export const SpeedChart = ({ data, height = 400 }: SpeedChartProps) => {
               Latency:{" "}
               <span className="font-medium">{data.latency.toFixed(1)} ms</span>
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Provider: {data.provider}
             </p>
           </div>
@@ -61,13 +61,13 @@ export const SpeedChart = ({ data, height = 400 }: SpeedChartProps) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
         Speed Trends Over Time
       </h3>
 
       {data.length === 0 ? (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
           <div className="text-center">
             <div className="text-4xl mb-4">📊</div>
             <p>No speed test data available</p>

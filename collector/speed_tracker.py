@@ -16,7 +16,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-import httpx
 import speedtest  # type: ignore
 from dateutil import tz
 from dotenv import load_dotenv
@@ -35,9 +34,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger("collector")
 
-# Use SQLite database (same as backend)
-DB_URL = os.getenv("DB_URL", "sqlite:///../backend/database.sqlite")
+# Resolve database URL consistently with backend
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_SQLITE_PATH = os.path.normpath(
+    os.path.join(BASE_DIR, "..", "backend", "database.sqlite")
+)
+
+ENV_DB_URL = os.getenv("DB_URL")
+if ENV_DB_URL:
+    DB_URL = ENV_DB_URL
+elif os.getenv("DB_HOST"):
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+    DB_NAME = os.getenv("DB_NAME", "speed_monitor")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    DB_HOST = os.getenv("DB_HOST")
+    DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+else:
+    DB_URL = f"sqlite:///{DEFAULT_SQLITE_PATH}"
 INTERVAL_MINUTES = int(os.getenv("INTERVAL_MINUTES", "10"))
+MAX_DOWNLOAD_MBPS = float(os.getenv("MAX_DOWNLOAD_MBPS", "1000"))
+MAX_UPLOAD_MBPS = float(os.getenv("MAX_UPLOAD_MBPS", "1000"))
 
 # ---------------------------------------------------------------------------
 # Database setup
@@ -65,7 +82,6 @@ Base.metadata.create_all(engine)
 # Domain models
 # ---------------------------------------------------------------------------
 class Provider(str, Enum):
-    FAST_COM = "fast.com"
     SPEEDTEST = "speedtest.net"
 
 @dataclass
@@ -85,33 +101,7 @@ class SpeedResult:
 class SpeedProviderError(Exception):
     pass
 
-class FastComRunner:
-    """Uses unofficial fast.com endpoints (no upload/latency)"""
-
-    ENDPOINT = "https://api.fast.com/netflix/speedtest/v2"
-
-    async def run(self) -> SpeedResult:
-        async with httpx.AsyncClient(timeout=60) as client:
-            try:
-                cfg = (await client.get(self.ENDPOINT)).json()
-                url = cfg["targets"][0]["url"]
-                start = time.perf_counter()
-                resp = await client.get(url)
-                duration = time.perf_counter() - start
-                size_mb = len(resp.content) / 1_048_576  # bytes -> MB
-                download = (size_mb * 8) / duration  # Mbps
-                result = SpeedResult(
-                    timestamp=datetime.now(tz.UTC),
-                    provider=Provider.FAST_COM,
-                    server="fast.com",
-                    download_mbps=round(download, 2),
-                    upload_mbps=0.0,
-                    latency_ms=0.0,
-                    raw_json=json.dumps({"size_mb": size_mb, "duration_s": duration}),
-                )
-                return result
-            except Exception as exc:
-                raise SpeedProviderError(f"Fast.com failed: {exc}") from exc
+# Fast.com support removed
 
 class SpeedtestCLIRunner:
     """Runs speedtest-cli in blocking executor"""
@@ -147,6 +137,19 @@ class Repository:
         self.session = SessionLocal()
 
     def save(self, res: SpeedResult):
+        # Sanity checks to avoid unrealistic outliers
+        if res.download_mbps < 0 or res.upload_mbps < 0 or res.latency_ms < 0:
+            logger.warning("Skipping invalid negative values: %s", res)
+            return
+        if res.download_mbps > MAX_DOWNLOAD_MBPS or res.upload_mbps > MAX_UPLOAD_MBPS:
+            logger.warning(
+                "Skipping outlier (exceeds max thresholds): %.2f↓ %.2f↑ (max %.2f/%.2f)",
+                res.download_mbps,
+                res.upload_mbps,
+                MAX_DOWNLOAD_MBPS,
+                MAX_UPLOAD_MBPS,
+            )
+            return
         orm = SpeedTestORM(
             timestamp=res.timestamp,
             provider=res.provider.value,
@@ -166,7 +169,8 @@ class Collector:
     def __init__(self, interval_minutes: int = INTERVAL_MINUTES):
         self.interval = interval_minutes * 60
         self.repo = Repository()
-        self.runners = [FastComRunner(), SpeedtestCLIRunner()]
+        # Only use speedtest.net
+        self.runners = [SpeedtestCLIRunner()]
         self.running = True
 
     async def _run_once(self):

@@ -18,7 +18,7 @@ const SpeedTest = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [["fast.com", "speedtest.net"]],
+        isIn: [["speedtest.net"]],
       },
     },
     server: {

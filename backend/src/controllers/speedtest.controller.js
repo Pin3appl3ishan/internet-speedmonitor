@@ -1,7 +1,7 @@
-import { StatusCodes } from 'http-status-codes';
-import { Op } from 'sequelize';
-import { subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import SpeedTest from '../models/speedtest.model.js';
+import { StatusCodes } from "http-status-codes";
+import { Op } from "sequelize";
+import { subDays } from "date-fns";
+import SpeedTest from "../models/speedtest.model.js";
 
 /**
  * Get speed test results with optional date range filtering
@@ -10,47 +10,91 @@ import SpeedTest from '../models/speedtest.model.js';
  * @param {Date} endDate - End date for custom range
  * @returns {Promise<Object>} - Speed test results with statistics
  */
-export const getSpeedTests = async (range = 'day', startDate, endDate) => {
+// UTC-safe date helpers to avoid timezone drift between services
+const startOfDayUtc = (d = new Date()) =>
+  new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0)
+  );
+const endOfDayUtc = (d = new Date()) =>
+  new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+      23,
+      59,
+      59,
+      999
+    )
+  );
+
+const startOfWeekUtc = (d = new Date(), weekStartsOn = 1) => {
+  const day = d.getUTCDay();
+  const diff = (day - weekStartsOn + 7) % 7; // 0 = same day, 1 = one day after start
+  const start = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0)
+  );
+  start.setUTCDate(start.getUTCDate() - diff);
+  return start;
+};
+const endOfWeekUtc = (d = new Date(), weekStartsOn = 1) => {
+  const start = startOfWeekUtc(d, weekStartsOn);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 6);
+  end.setUTCHours(23, 59, 59, 999);
+  return end;
+};
+
+const startOfMonthUtc = (d = new Date()) =>
+  new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0));
+const endOfMonthUtc = (d = new Date()) =>
+  new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 23, 59, 59, 999)
+  );
+
+export const getSpeedTests = async (range = "day", startDate, endDate) => {
   const now = new Date();
   let where = {};
-  
-  // Set date range based on the specified period
+
+  // Set date range based on the specified period (UTC boundaries)
   switch (range.toLowerCase()) {
-    case 'day':
+    case "day":
       where.timestamp = {
-        [Op.gte]: startOfDay(now),
-        [Op.lte]: endOfDay(now),
+        [Op.gte]: startOfDayUtc(now),
+        [Op.lte]: endOfDayUtc(now),
       };
       break;
-    case 'week':
+    case "week":
       where.timestamp = {
-        [Op.gte]: startOfWeek(now, { weekStartsOn: 1 }),
-        [Op.lte]: endOfWeek(now, { weekStartsOn: 1 }),
+        [Op.gte]: startOfWeekUtc(now, 1),
+        [Op.lte]: endOfWeekUtc(now, 1),
       };
       break;
-    case 'month':
+    case "month":
       where.timestamp = {
-        [Op.gte]: startOfMonth(now),
-        [Op.lte]: endOfMonth(now),
+        [Op.gte]: startOfMonthUtc(now),
+        [Op.lte]: endOfMonthUtc(now),
       };
       break;
-    case 'custom':
+    case "custom":
       if (!startDate || !endDate) {
-        throw new Error('Start and end dates are required for custom range');
+        throw new Error("Start and end dates are required for custom range");
       }
       where.timestamp = {
-        [Op.gte]: startOfDay(new Date(startDate)),
-        [Op.lte]: endOfDay(new Date(endDate)),
+        [Op.gte]: startOfDayUtc(new Date(startDate)),
+        [Op.lte]: endOfDayUtc(new Date(endDate)),
       };
       break;
     default:
-      throw new Error('Invalid range. Must be one of: day, week, month, custom');
+      throw new Error(
+        "Invalid range. Must be one of: day, week, month, custom"
+      );
   }
 
   // Fetch speed tests from the database
   const speedTests = await SpeedTest.findAll({
     where,
-    order: [['timestamp', 'ASC']],
+    order: [["timestamp", "ASC"]],
   });
 
   // Calculate statistics
@@ -59,7 +103,7 @@ export const getSpeedTests = async (range = 'day', startDate, endDate) => {
   return {
     count: speedTests.length,
     range,
-    ...(range === 'custom' && { startDate, endDate }),
+    ...(range === "custom" && { startDate, endDate }),
     stats,
     results: speedTests,
   };
@@ -89,7 +133,10 @@ const calculateStats = (tests) => {
       acc.totalLatency += test.latency_ms;
       acc.maxDownload = Math.max(acc.maxDownload, test.download_mbps);
       acc.maxUpload = Math.max(acc.maxUpload, test.upload_mbps);
-      acc.minLatency = Math.min(acc.minLatency || test.latency_ms, test.latency_ms);
+      acc.minLatency = Math.min(
+        acc.minLatency || test.latency_ms,
+        test.latency_ms
+      );
       return acc;
     },
     {
@@ -129,8 +176,23 @@ export const createSpeedTest = async (data) => {
   } = data;
 
   // Validate required fields
-  if (!provider || download_mbps === undefined || upload_mbps === undefined || latency_ms === undefined) {
-    throw new Error('Missing required fields');
+  if (
+    !provider ||
+    download_mbps === undefined ||
+    upload_mbps === undefined ||
+    latency_ms === undefined
+  ) {
+    throw new Error("Missing required fields");
+  }
+
+  // Sanity checks to filter out unrealistic values (configurable via env)
+  const maxDownload = Number(process.env.MAX_DOWNLOAD_MBPS || 1000);
+  const maxUpload = Number(process.env.MAX_UPLOAD_MBPS || 1000);
+  if (download_mbps < 0 || upload_mbps < 0 || latency_ms < 0) {
+    throw new Error("Invalid negative values");
+  }
+  if (download_mbps > maxDownload || upload_mbps > maxUpload) {
+    throw new Error("Outlier values exceed configured thresholds");
   }
 
   // Create the speed test record

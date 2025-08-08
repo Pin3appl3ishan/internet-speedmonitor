@@ -154,10 +154,12 @@ export const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[50vh] bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
@@ -165,10 +167,12 @@ export const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[50vh] bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-4xl mb-4">⚠️</div>
-          <p className="text-red-600 mb-4">Error loading data: {error}</p>
+          <p className="text-red-600 dark:text-red-400 mb-4">
+            Error loading data: {error}
+          </p>
           <button
             onClick={fetchData}
             className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
@@ -181,17 +185,9 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Internet Speed Monitor
-          </h1>
-          <p className="text-gray-600">
-            Track your internet performance over time
-          </p>
-        </div>
+        {/* Header moved to App.tsx */}
 
         {/* Filters */}
         <div className="mb-6">
@@ -239,25 +235,31 @@ export const Dashboard: React.FC = () => {
 
         {/* Data Summary */}
         {data && data.count > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Summary for {getRangeDisplayName()}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Max Download:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">
+                  Max Download:
+                </span>{" "}
                 <span className="font-medium">
                   {data.stats.maxDownload.toFixed(2)} Mbps
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Max Upload:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">
+                  Max Upload:
+                </span>{" "}
                 <span className="font-medium">
                   {data.stats.maxUpload.toFixed(2)} Mbps
                 </span>
               </div>
               <div>
-                <span className="text-gray-600">Min Latency:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">
+                  Min Latency:
+                </span>{" "}
                 <span className="font-medium">
                   {data.stats.minLatency.toFixed(1)} ms
                 </span>

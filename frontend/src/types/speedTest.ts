@@ -1,7 +1,7 @@
 export interface SpeedTest {
   id: number;
   timestamp: string;
-  provider: "fast.com" | "speedtest.net";
+  provider: "speedtest.net";
   server: string;
   download_mbps: number;
   upload_mbps: number;

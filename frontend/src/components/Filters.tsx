@@ -24,9 +24,11 @@ export const Filters: React.FC<FiltersProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium text-gray-700">Time Range:</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Time Range:
+        </span>
 
         <div className="flex flex-wrap gap-2">
           {ranges.map((range) => (
@@ -50,16 +52,16 @@ export const Filters: React.FC<FiltersProps> = ({
               onChange={(e) =>
                 onCustomDateChange?.(e.target.value, customEndDate || "")
               }
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
             />
-            <span className="text-gray-500">to</span>
+            <span className="text-gray-500 dark:text-gray-400">to</span>
             <input
               type="date"
               value={customEndDate || ""}
               onChange={(e) =>
                 onCustomDateChange?.(customStartDate || "", e.target.value)
               }
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
             />
           </div>
         )}

@@ -17,7 +17,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-  
+
   schemas:
     SpeedTest:
       type: object
@@ -31,7 +31,7 @@ components:
           example: "2025-07-23T10:30:00.000Z"
         provider:
           type: string
-          enum: [fast.com, speedtest.net]
+          enum: [speedtest.net]
           example: "speedtest.net"
         server:
           type: string
@@ -58,7 +58,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-    
+
     SpeedTestInput:
       type: object
       required:
@@ -69,7 +69,7 @@ components:
       properties:
         provider:
           type: string
-          enum: [fast.com, speedtest.net]
+          enum: [speedtest.net]
           example: "speedtest.net"
         server:
           type: string
@@ -94,7 +94,7 @@ components:
           type: object
           description: Raw test result data
           example: {}
-    
+
     Error:
       type: object
       properties:
@@ -144,7 +144,7 @@ paths:
             format: date
           description: End date for custom range (YYYY-MM-DD)
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
@@ -173,14 +173,14 @@ paths:
                   results:
                     type: array
                     items:
-                      $ref: '#/components/schemas/SpeedTest'
-        '400':
+                      $ref: "#/components/schemas/SpeedTest"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-    
+                $ref: "#/components/schemas/Error"
+
     post:
       summary: Add a new speed test result
       description: Record a new internet speed test result
@@ -191,20 +191,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SpeedTestInput'
+              $ref: "#/components/schemas/SpeedTestInput"
       responses:
-        '201':
+        "201":
           description: Speed test result created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SpeedTest'
-        '400':
+                $ref: "#/components/schemas/SpeedTest"
+        "400":
           description: Validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /health:
     get:
@@ -213,7 +213,7 @@ paths:
       tags:
         - System
       responses:
-        '200':
+        "200":
           description: API is running
           content:
             application/json:
